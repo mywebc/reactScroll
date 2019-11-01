@@ -4,7 +4,7 @@ import './index.css';
 import fastclick from 'fastclick'
 // import App from './App';
 import * as serviceWorker from './serviceWorker';
-import Index from './index.jsx'
+import Index from './Index.jsx'
 
 
 fastclick.attach(document.body)

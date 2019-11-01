@@ -6,13 +6,14 @@ import C from './scroll/C';
 import BScroll from '@better-scroll/core'
 import Slide from '@better-scroll/slide'
 
+
 import './index.css'
 
 const getData = [
   { type: "A", data: { data: "A1" } },
   { type: "B", data: { data: "B1" } },
   { type: "C", data: { data: "C1" } },
-  { type: "A", data: { data: "A2" } },
+  // { type: "A", data: { data: "A2" } },
 ]
 
 
@@ -21,6 +22,7 @@ export default class index extends React.Component {
   wrapperRef;
   contentRef;
   bs;
+  swiper;
   constructor(props) {
     super(props);
     this.wrapperRef = React.createRef();
@@ -38,7 +40,7 @@ export default class index extends React.Component {
   exportComponent = (type, data) => {
     switch (type) {
       case "A": return <A closeSlide={this.closeSlide} openSlide={this.openSlide} data={data} />;
-      case "B": return <B data={data} />;
+      case "B": return <B data={data} openSlide={this.openSlide} />;
       case "C": return <C data={data} />;
       default: return <div>nothing</div>
     }
@@ -46,11 +48,11 @@ export default class index extends React.Component {
 
   closeSlide = () => {
     console.log("click")
-    // this.setState({ isSlide: false },() => {
-    //   // this.bs.refresh()
+    // this.bs.destroy()
+    // console.log("this",this.bs)
+    // this.bs.on("destroy",() => {
+    //   console.log("destory")
     // })
-    // this.bs.stop()
-    // this.bs.goToPage(1)
   }
 
   openSlide = () => {
@@ -61,76 +63,71 @@ export default class index extends React.Component {
     const shiftData = getData.shift()
     allComponentDataCopy.push(shiftData)
     console.log("12", shiftData, allComponentDataCopy)
-
     this.setState({ allComponentData: allComponentDataCopy }, () => {
       const { clientWidth } = this.wrapperRef.current
       this.contentRef.current.style.width = clientWidth * this.state.allComponentData.length + "px"
-      this.setState({ itemWidth: clientWidth, })
-      this.forceUpdate()
-      this.bs.refresh()
+      this.setState({ itemWidth: clientWidth, },() =>{
+        this.forceUpdate()
+        !this.bs&&this.initScroll()
+        this.bs.refresh()
+        console.log("this.bs.getCurrentPage()",this.bs.getCurrentPage())
+        this.bs.goToPage(allComponentData.length)
+      })
+      
     })
   }
   componentDidMount() {
-    const { allComponentData } = this.state
-    const { clientWidth } = this.wrapperRef.current
-    this.contentRef.current.style.width = clientWidth * allComponentData.length + "px"
-    this.setState({ itemWidth: clientWidth, })
-    setTimeout(() => {
-      this.bs = new BScroll(this.wrapperRef.current, {
-        scrollX: this.state.slideX,
-        scrollY: false,
-        slide: {
-          loop: false,
-          threshold: 100,
-          // listenFlick: false
-          disableSetWidth: true
-        },
-        useTransition: true,
-        momentum: false,
-        bounce: {
-          left: false,
-          right: false
-        },
-        stopPropagation: true,
-        click: true,
-        tap: true,
-        preventDefaultException: { className: /(^|\s)closeBtn(\s|$)/ }
-      })
-      // this.bs.disable()
-      console.log("change", this.bs.getCurrentPage())
-      this.bs.on("slideWillChange", (page) => {
-        // console.log("change", page)
-        console.log("change", this.bs.getCurrentPage())
-        if (this.bs.getCurrentPage().pageX === 1 && this.state.slide) {
-          // this.bs.enable()
-        }
-      })
-
-      this.bs.on("beforeScrollStart", () => {
-        const currentIndex = this.bs.getCurrentPage()
-        console.log("beforeScrollStart", currentIndex)
-        // this.bs.refresh()
-        if (this.state.isSlide) {
-          // this.bs.enable()
-        } else {
-          // this.bs.disable()
-          // this.setState({ isSlide: false }, () => {
-          //   this.bs.enable()
-          // })
-        }
-      })
-      this.bs.on("scrollEnd", () => {
-        console.log("scrollEnd")
-      })
-      this.bs.on("scroll", () => {
-        console.log("scroll")
-      })
-      this.bs.on("scrollCancel", () => {
-        console.log("scrollCancel")
-      })
-    }, 100)
-
+    // const { allComponentData } = this.state
+    // this.initScroll()
   }
+
+
+initScroll = () => {
+  const { allComponentData } = this.state
+  const { clientWidth } = this.wrapperRef.current
+  this.contentRef.current.style.width = clientWidth * allComponentData.length + "px"
+  this.setState({ itemWidth: clientWidth, })
+    this.bs = new BScroll(this.wrapperRef.current, {
+      scrollX: this.state.slideX,
+      scrollY: false,
+      slide: {
+        loop: false,
+        threshold: 100,
+        // listenFlick: false
+        disableSetWidth: true
+      },
+      useTransition: true,
+      momentum: false,
+      bounce: {
+        left: false,
+        right: false
+      },
+      stopPropagation: true,
+      click: true,
+      tap: true,
+      // preventDefaultException: { className: /(^|\s)closeBtn(\s|$)/ },
+      // eventPassthrough: "vertical"
+      directionLockThreshold: 3
+    })
+    // this.bs.disable()
+    console.log("change", this.bs.getCurrentPage())
+    this.bs.on("slideWillChange", (page) => {
+      console.log("change", this.bs.getCurrentPage())
+    })
+
+    this.bs.on("beforeScrollStart", () => {
+    })
+    this.bs.on("scrollEnd", () => {
+      console.log("scrollEnd")
+    })
+    this.bs.on("scroll", () => {
+      console.log("scroll")
+    })
+    this.bs.on("scrollCancel", () => {
+      console.log("scrollCancel")
+    })
+}
+
   render() {
     const { itemWidth, allComponentData } = this.state
     console.log("allComponentData", allComponentData)
